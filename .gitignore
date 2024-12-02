@@ -1,0 +1,8 @@
+# Default ignored files
+/shelf/
+
+# Virtual environments
+.env
+
+# IDE-specific files
+/.idea/
