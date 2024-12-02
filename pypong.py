@@ -11,6 +11,28 @@ GAME_OVER = 3
 
 class Game:
     def __init__(self):
+        """
+        Initialise the PyPong game with game setup, configuration, and initial game state.
+
+        Sets up pygame, screen dimensions, game fonts, initial scoring, game objects,
+        and prepares the game for starting. Configures:
+        - Screen display and frame rate
+        - Custom fonts for menus and titles
+        - Initial game state (start screen)
+        - Scoring parameters
+        - Game objects (ball and paddles)
+        - Key bindings for player controls
+
+        Attributes:
+            screen_dims (tuple): Screen width and height in pixels
+            current_state (int): Current game state (START_SCREEN, PLAYING, etc.)
+            score_p1 (int): Score for Player 1 (left paddle)
+            score_p2 (int): Score for Player 2 (right paddle)
+            winning_score (int): Points needed to win the game
+            ball (Ball): Game ball object
+            l_paddle (Paddle): Left player's paddle
+            r_paddle (Paddle): Right player's paddle
+        """
         # pygame setup
         pygame.init()
         pygame.display.set_caption("PyPong")
@@ -40,7 +62,7 @@ class Game:
 
 
     def draw_start_screen(self):
-        """Renders the start screen"""
+        """Render the START_SCREEN."""
         self.screen.fill("black")
 
         # Title
@@ -55,7 +77,7 @@ class Game:
 
 
     def draw_between_points_screen(self):
-        """Renders the screen between game points"""
+        """Render the BETWEEN_POINTS screen."""
         self.screen.fill("black")
 
         # Current score
@@ -97,7 +119,7 @@ class Game:
 
 
     def draw_game_over_screen(self):
-        """Renders the game over screen"""
+        """Render the GAME_OVER screen."""
         self.screen.fill("black")
 
         # Game over text
@@ -118,15 +140,34 @@ class Game:
 
 
     def draw_playing_screen(self):
-        """Renders the main game screen"""
+        """Render the PLAYING screen."""
         self.screen.fill("black")
 
+        self.draw_net()
         self.l_paddle.draw(self.screen)
         self.r_paddle.draw(self.screen)
         self.ball.draw(self.screen)
 
 
+    def draw_net(self):
+        """Draw a dashed net in the middle of the screen."""
+        net_x = self.screen_dims[0] // 2
+        num_segments = 20
+        segment_height = self.screen_dims[1] // (num_segments * 2)
+        net_width = 1
+
+        for i in range(num_segments):
+            # Calculate y-coordinate for each segment
+            segment_y = i * (segment_height * 2)
+            # Draw segment
+            pygame.draw.rect(self.screen, "white", (net_x - net_width // 2, segment_y, net_width, segment_height))
+
+
     def update_game_objects(self):
+        """
+        Update ball position and check if edges or paddles have been hit.
+        Update paddle positions.
+        """
         # Update ball and paddle positions
         self.ball.move()
 
@@ -150,16 +191,10 @@ class Game:
 
 
     def end_point(self, side: str = None):
-        # Paddle speeds reset to 0
-        self.l_paddle.v_speed = 0
-        self.r_paddle.v_speed = 0
-
-        # Random starting position and direction for ball
-        self.ball.rect.left = self.ball.screen_width // 2 - self.ball.side_length // 2
-        self.ball.rect.top = random.randint(0, self.ball.screen_height)
-        self.ball.h_speed = random.choice([-1, 1]) * 3
-        self.ball.v_speed = random.choice([-1, 1]) * 5
-
+        """
+        Update score and transition to GAME_OVER screen if game has been won.
+        Reset ball and paddle positions.
+        """
         # Update scores and check if game won
         if side == "left":
             self.score_p2 += 1
@@ -178,14 +213,27 @@ class Game:
         else:
             raise ValueError(f"`end_point()` expected a string of either 'left' or 'right'")
 
+        # Paddle speeds reset to 0
+        self.l_paddle.v_speed = self.r_paddle.v_speed = 0
+
+        # Paddles moved back to centre
+        self.l_paddle.rect.top = self.r_paddle.rect.top = (self.screen_dims[1] // 2 - self.r_paddle.rect.height // 2)
+
+        # Random starting position and direction for ball
+        self.ball.rect.left = self.ball.screen_width // 2 - self.ball.side_length // 2
+        self.ball.rect.top = random.randint(0, self.ball.screen_height)
+        self.ball.h_speed = random.choice([-1, 1]) * 3
+        self.ball.v_speed = random.choice([-1, 1]) * 5
+
 
     def game_over_condition(self):
+        """Check if winning conditions have been fulfilled - return a boolean."""
         if self.score_p1 >= self.winning_score or self.score_p2 >= self.winning_score:
             if abs(self.score_p1 - self.score_p2) >= 2:
                 return True
 
     def handle_events(self):
-        """Handles transitions between game states and game control logic."""
+        """Handle transitions between game states and game control logic."""
         for event in pygame.event.get():
             # Closing the game
             if event.type == pygame.QUIT:
@@ -240,7 +288,7 @@ class Game:
 
 
     def run(self):
-        """Main game loop"""
+        """Main game loop."""
         running = True
         while running:
             # Handle events
@@ -272,6 +320,19 @@ class Game:
 
 class KeyBindings:
     def __init__(self):
+        """
+        Initialise default key bindings for the Pong game.
+
+        Sets up default control keys for both players:
+        - Left player: W (up), S (down)
+        - Right player: Up arrow (up), Down arrow (down)
+
+        Attributes:
+            left_up (int): Pygame key constant for left player's up movement
+            left_down (int): Pygame key constant for left player's down movement
+            right_up (int): Pygame key constant for right player's up movement
+            right_down (int): Pygame key constant for right player's down movement
+        """
         # Default key bindings
         self.left_up = pygame.K_w
         self.left_down = pygame.K_s
@@ -280,7 +341,7 @@ class KeyBindings:
 
     def rebind_key(self, action, new_key):
         """
-        Rebinds an action (up or down, for either left or right player) to a new key.
+        Rebind an action (up or down, for either left or right player) to a new key.
 
         :param action: The action to rebind ('left_up', 'left_down', 'right_up' or 'right_down').
         :param new_key: The new Pygame key constant.
@@ -300,6 +361,33 @@ class KeyBindings:
 class Ball:
     def __init__(self, side_length: int=10, x_pos=None, y_pos=None, h_speed: int=3, v_speed: int=5,
                  color: str="white", screen_size: tuple=(800, 600)):
+        """
+        Initialise a Ball object for the Pong game.
+
+        Creates a ball with specified or default properties, including position,
+        horizontal and vertical speed, colour, and screen boundaries.
+
+        Args:
+            side_length (int, optional): Size of the ball (width and height). Defaults to 10.
+            x_pos (int, optional): Initial x-coordinate. Defaults to screen center.
+            y_pos (int, optional): Initial y-coordinate. Defaults to screen center.
+            h_speed (int, optional): Horizontal movement speed. Defaults to 3.
+            v_speed (int, optional): Vertical movement speed. Defaults to 5.
+            color (str, optional): Ball color. Defaults to "white".
+            screen_size (tuple, optional): Screen dimensions (width, height). Defaults to (800, 600).
+
+        Raises:
+            ValueError: If side length is invalid or starting position is outside screen boundaries.
+
+        Attributes:
+            screen_width (int): Screen width
+            screen_height (int): Screen height
+            rect (pygame.Rect): Ball's rectangular representation
+            h_speed (int): Horizontal speed
+            v_speed (int): Vertical speed
+            color (str): Ball color
+        """
+
         self.screen_width = screen_size[0]
         self.screen_height = screen_size[1]
         self.side_length = side_length
@@ -336,7 +424,7 @@ class Ball:
 
 
     def check_sides_hit(self):
-        """Adjusts v_speed if ball hits top/bottom edge of screen."""
+        """Adjust vertical speed if ball hits top/bottom edge of screen."""
         if self.rect.top <= 0:
             self.v_speed = abs(self.v_speed)
             self.rect.top = 0
@@ -346,7 +434,7 @@ class Ball:
 
 
     def check_paddle_hit(self, paddle):
-        """Reverses h_speed and increases by 1 if ball hits either paddle."""
+        """Reverse horizontal speed and increase the same by 1 if the ball hits either paddle."""
         if self.rect.colliderect(paddle):
             self.h_speed *= -1
             if self.h_speed < 0:
@@ -360,7 +448,7 @@ class Ball:
 
 
     def check_ends_hit(self):
-        """Returns end which was hit if True."""
+        """Return end which was hit (if True)."""
         if self.rect.left <= 0:
             return "left"
         elif self.rect.right >= self.screen_width:
@@ -370,18 +458,46 @@ class Ball:
 
 
     def move(self):
-        """Updates ball position (`self.rect`) based on current `h_speed` and `v_speed` respectively."""
+        """Update ball position based on current horizontal and vertical speeds."""
         self.rect.x += self.h_speed
         self.rect.y += self.v_speed
 
 
     def draw(self, screen):
+        """Draw ball on screen."""
         pygame.draw.rect(screen, self.color, self.rect)
 
 
 class Paddle:
     def __init__(self, left: bool=True, width: int=5, length: int=60, y_pos=None, v_speed: int=0, color: str="white",
                  screen_size: tuple=(800, 600)):
+        """
+        Initialise a Paddle object for the Pong game.
+
+        Creates a paddle with specified or default properties, including position,
+        size, movement speed, and colour.
+
+        Args:
+            left (bool, optional): Paddle position (True for left, False for right). Defaults to True.
+            width (int, optional): Paddle width. Defaults to 5.
+            length (int, optional): Paddle height/length. Defaults to 60.
+            y_pos (int, optional): Initial y-coordinate. Defaults to screen center.
+            v_speed (int, optional): Vertical movement speed. Defaults to 0.
+            color (str, optional): Paddle color. Defaults to "white".
+            screen_size (tuple, optional): Screen dimensions (width, height). Defaults to (800, 600).
+
+        Raises:
+            ValueError: If width or length is invalid, or starting position is outside screen boundaries.
+
+        Attributes:
+            screen_width (int): Screen width
+            screen_height (int): Screen height
+            left (bool): Paddle side (left or right)
+            width (int): Paddle width
+            rect (pygame.Rect): Paddle's rectangular representation
+            color (str): Paddle color
+            _v_speed (int): Vertical speed (with setter for range validation)
+        """
         self.screen_width = screen_size[0]
         self.screen_height = screen_size[1]
         self.left = left
@@ -413,9 +529,14 @@ class Paddle:
         self.color = color
 
 
-    # Set `x_pos` based on `left` and `width`
     @property
     def x_pos(self):
+        """
+        Get x-coordinate of paddle based on left and width params.
+
+        Returns:
+            int: x-coordinate of paddle
+        """
         if self.left:
             return 2
         else:
@@ -424,17 +545,34 @@ class Paddle:
 
     @property
     def v_speed(self):
+        """
+        Get paddle's vertical speed.
+
+        Returns:
+            int: vertical speed
+        """
         return self._v_speed
 
 
     @v_speed.setter
     def v_speed(self, value):
+        """
+        Set paddle's vertical speed (with validation).
+
+        :param value (int): New speed value.
+        :raises: ValueError: If new speed value outside range -10 to 10.
+        """
         if -10 <= value <= 10:
             self._v_speed = value
+        else:
+            raise ValueError(f"New v_speed value must be an int within -10 to 10.")
 
 
     def check_edges_hit(self):
-        # if (self.rect.top - self._v_speed) < 0 and (self.rect.bottom - self._v_speed) > self.screen_height:
+        """
+        Check if paddle has reached top or bottom of screen.
+        If true, stop paddle at top/bottom of screen and reset paddle speed to 0.
+        """
         if self.rect.top <= 0:
             self._v_speed = 0
             self.rect.top = 0
@@ -444,6 +582,10 @@ class Paddle:
 
 
     def move(self):
+        """
+        Move paddle according to current vertical speed.
+        Call check_edges_hit() to prevent paddle moving off-screen.
+        """
         # Subtracts speed value to account for pygame coordinates increasing from top to bottom
         self.rect.top -=self._v_speed
 
@@ -452,6 +594,7 @@ class Paddle:
         return
 
     def draw(self, screen):
+        """Draw paddle on screen."""
         pygame.draw.rect(screen, self.color, self.rect)
 
 
@@ -459,12 +602,3 @@ if __name__ == "__main__":
     game = Game()
     game.run()
 
-# Future work
-    # home page for user config:
-        # color themes
-        # controls
-        # winning score
-        # difficulty levels
-            # paddle size
-            # ball speeds
-    # legend - controls?
