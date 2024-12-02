@@ -1,13 +1,6 @@
 import pygame
 import random
 
-# home page for user config:
-    # color themes
-    # controls
-    # winning score
-    # paddle size
-
-# legend - controls?
 
 # Game states
 START_SCREEN = 0
@@ -466,3 +459,12 @@ if __name__ == "__main__":
     game = Game()
     game.run()
 
+# Future work
+    # home page for user config:
+        # color themes
+        # controls
+        # winning score
+        # difficulty levels
+            # paddle size
+            # ball speeds
+    # legend - controls?
