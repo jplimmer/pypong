@@ -1,0 +1,9 @@
+screen:
+  screen_width: 800
+  screen_height: 600
+  fps: 60
+
+gameplay:
+  winning_score: 11
+  win_by_two: true
+
