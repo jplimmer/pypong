@@ -46,7 +46,7 @@ pip install -e .
 ```
 
 ## Running the Game
-After installation, you can run the game in any of these ways:
+After installation, you can run the game from the root directory in any of these ways:
 ```
 # Run as a module
 python -m pypong
